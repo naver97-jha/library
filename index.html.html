@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학교 도서관 행사 참여 우수 학생 집계 프로그램</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --gold: #f59e0b;
+      --silver: #94a3b8;
+      --bronze: #b45309;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn:hover { background: #f1f5f9; }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger {
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+    .btn-danger:hover { background: #fef2f2; }
+
+    /* 요약 카드 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      padding: 18px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-card .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* 메인 레이아웃 */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+
+    .panel h2 {
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+      font-size: 0.85rem;
+    }
+
+    /* 탭 */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border: none;
+      background: #e2e8f0;
+      color: #475569;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-bar select, .filter-bar input {
+      width: auto;
+      min-width: 130px;
+    }
+
+    /* 테이블 */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    tr:hover { background: #f8fafc; }
+
+    .badge-rank {
+      display: inline-block;
+      min-width: 28px;
+      text-align: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .rank-1 { background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; }
+    .rank-2 { background: #f1f5f9; color: #334155; border: 1px solid #94a3b8; }
+    .rank-3 { background: #ffedd5; color: #9a3412; border: 1px solid #ea580c; }
+
+    .event-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .event-tag {
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+    }
+
+    .count-pill {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1rem;
+    }
+
+    .delete-link {
+      color: #ef4444;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+    }
+    .delete-link:hover { text-decoration: underline; }
+
+    .helper-text {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>📚 학교 도서관 행사 참여 우수 학생 집계</h1>
+      <p>행사별 참여 학생을 등록하면 개인별 누적 참여 횟수와 순위를 자동으로 계산합니다.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn" onclick="loadSampleData()">샘플 데이터 넣기</button>
+      <button class="btn" onclick="exportRankingCSV()">순위표 엑셀(CSV) 저장</button>
+      <button class="btn btn-danger" onclick="clearAllData()">전체 초기화</button>
+    </div>
+  </header>
+
+  <!-- 요약 통계 -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">총 누적 참여 연인원</div>
+      <div class="value" id="statTotalParticipations">0명</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">참여 학생 수 (중복 제외)</div>
+      <div class="value" id="statUniqueStudents">0명</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">진행된 행사 종류</div>
+      <div class="value" id="statUniqueEvents">0개</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">최다 참여 학생 (1위)</div>
+      <div class="value" id="statTopStudent" style="font-size: 1.25rem;">-</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <!-- 좌측: 입력 영역 -->
+    <div>
+      <!-- 개별 등록 -->
+      <div class="panel">
+        <h2>개별 참여 등록</h2>
+        <form id="singleForm" onsubmit="addSingleRecord(event)">
+          <div class="form-row">
+            <div>
+              <label>학년</label>
+              <input type="number" id="grade" min="1" max="6" placeholder="예: 1" required />
+            </div>
+            <div>
+              <label>반</label>
+              <input type="number" id="classNum" min="1" max="20" placeholder="예: 3" required />
+            </div>
+            <div>
+              <label>번호</label>
+              <input type="number" id="studentNum" min="1" max="50" placeholder="예: 15" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>학생 이름</label>
+            <input type="text" id="studentName" placeholder="예: 김민준" required />
+          </div>
+
+          <div class="form-group">
+            <label>행사명</label>
+            <input type="text" id="eventName" list="eventList" placeholder="예: 세계 책의 날 퀴즈" required />
+            <datalist id="eventList"></datalist>
+          </div>
+
+          <div class="form-group">
+            <label>참여일</label>
+            <input type="date" id="eventDate" />
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">참여 기록 추가</button>
+        </form>
+      </div>
+
+      <!-- 일괄 붙여넣기 -->
+      <div class="panel">
+        <h2>엑셀 명단 일괄 등록</h2>
+        <div class="form-group">
+          <label>한 줄에 한 명씩 입력 (쉼표 또는 탭 구분)</label>
+          <textarea id="bulkInput" placeholder="학년, 반, 번호, 이름, 행사명 순서로 입력&#10;예시:&#10;1, 2, 5, 이서연, 독서의 달 북큐레이션&#10;2, 4, 11, 박도윤, 독서의 달 북큐레이션"></textarea>
+          <p class="helper-text">* 엑셀에서 [학년 | 반 | 번호 | 이름 | 행사명] 열을 드래그해 그대로 복사·붙여넣기 하시면 됩니다.</p>
+        </div>
+        <button type="button" class="btn btn-primary" style="width: 100%;" onclick="addBulkRecords()">일괄 등록하기</button>
+      </div>
+    </div>
+
+    <!-- 우측: 순위 및 전체 내역 -->
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab-btn active" id="tabRanking" onclick="switchTab('ranking')">🏆 다참여 학생 순위</button>
+        <button class="tab-btn" id="tabLogs" onclick="switchTab('logs')">📋 전체 참여 기록 (<span id="logCount">0</span>)</button>
+      </div>
+
+      <!-- 순위 뷰 -->
+      <div id="viewRanking">
+        <div class="filter-bar">
+          <select id="filterGrade" onchange="render()">
+            <option value="all">전체 학년</option>
+            <option value="1">1학년</option>
+            <option value="2">2학년</option>
+            <option value="3">3학년</option>
+            <option value="4">4학년</option>
+            <option value="5">5학년</option>
+            <option value="6">6학년</option>
+          </select>
+          <input type="text" id="searchStudent" placeholder="이름 검색..." oninput="render()" />
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 70px;">순위</th>
+                <th style="width: 110px;">학번(학년/반/번)</th>
+                <th style="width: 100px;">이름</th>
+                <th style="width: 90px;">참여 횟수</th>
+                <th>참여한 행사 목록</th>
+              </tr>
+            </thead>
+            <tbody id="rankingBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 전체 기록 뷰 -->
+      <div id="viewLogs" style="display: none;">
+        <div class="filter-bar">
+          <select id="filterEvent" onchange="render()">
+            <option value="all">전체 행사 보기</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>참여일</th>
+                <th>학년-반-번호</th>
+                <th>이름</th>
+                <th>행사명</th>
+                <th style="width: 60px;">관리</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'school_library_event_records_v1';
+  let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+  // 오늘 날짜 기본 설정
+  document.getElementById('eventDate').valueAsDate = new Date();
+
+  function saveRecords() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    render();
+  }
+
+  // 개별 등록
+  function addSingleRecord(e) {
+    e.preventDefault();
+    const record = {
+      id: Date.now() + Math.random(),
+      grade: String(document.
