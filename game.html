@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>도서관 이용 교육 - KDC 책 꽂기 분류 게임</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --correct: #16a34a;
+      --wrong: #dc2626;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 960px;
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      padding: 28px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* 시작 화면 */
+    .start-screen, .result-screen {
+      text-align: center;
+      padding: 30px 16px;
+    }
+
+    .start-screen h1 {
+      font-size: 2rem;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .start-screen p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .mode-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-mode {
+      padding: 18px 28px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 2px solid var(--primary);
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 220px;
+    }
+
+    .btn-basic {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-basic:hover { background: var(--primary-dark); }
+
+    .btn-advanced {
+      background: #fff;
+      color: var(--primary);
+    }
+    .btn-advanced:hover { background: #eff6ff; }
+
+    .kdc-guide {
+      margin-top: 32px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      text-align: left;
+    }
+
+    .kdc-guide h3 {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .kdc-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      .kdc-mini-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .kdc-mini-item {
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* 상단 상태바 */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #f1f5f9;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .progress-badge {
+      background: #eff6ff;
+      color: var(--primary);
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+    }
+
+    .score-badge {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* 책 카드 영역 */
+    .book-stage {
+      background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+      border: 2px solid #fde68a;
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 22px;
+      position: relative;
+    }
+
+    .book-label {
+      display: inline-block;
+      background: #f59e0b;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .book-title {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 8px;
+      word-break: keep-all;
+    }
+
+    .book-hint {
+      font-size: 0.98rem;
+      color: #78350f;
+    }
+
+    /* 피드백 알림창 */
+    .feedback-box {
+      display: none;
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 1rem;
+      line-height: 1.5;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .feedback-correct {
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      color: #14532d;
+    }
+
+    .feedback-wrong {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      color: #7f1d1d;
+    }
+
+    .btn-next {
+      background: #0f172a;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 0.95rem;
+    }
+
+    .btn-next:hover { background: #334155; }
+
+    /* 10주제 서가 버튼 그리드 */
+    .shelf-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .shelf-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .shelf-btn {
+      background: #ffffff;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .shelf-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: #eff6ff;
+      transform: translateY(-2px);
+    }
+
+    .shelf-btn:disabled {
+      cursor: default;
+      opacity: 0.75;
+    }
+
+    .shelf-num {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .shelf-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .shelf-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .shelf-btn.selected-correct {
+      background: #dcfce7;
+      border-color: var(--correct);
+      opacity: 1;
+    }
+
+    .shelf-btn.selected-wrong {
+      background: #fee2e2;
+      border-color: var(--wrong);
+      opacity: 1;
+    }
+
+    /* 결과 화면 */
+    .result-score {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 16px 0;
+    }
+
+    .result-msg {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .wrong-review {
+      text-align: left;
+      max-width: 650px;
+      margin: 0 auto 24px auto;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .wrong-review h4 {
+      margin-bottom: 10px;
+      color: #dc2626;
+    }
+
+    .wrong-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.92rem;
+    }
+    .wrong-item:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+<div class="game-container">
+  <!-- 1. 시작 화면 -->
+  <div id="startScreen" class="start-screen">
+    <h1>📚 도서관 사서 도전! 책 분류 게임</h1>
+    <p>
+      새로 들어온 책들이 서
